@@ -16,7 +16,7 @@
 
 LAYOUT_WITH_LEGEND()
 
-title C4 Context Diagram - Intelligent Video Intercom System with Face Recognition
+title Контекстная диаграмма системы умного видеодомофона
 
 Person(visitor, "Посетитель", "Человек, который хочет попасть в здание/квартиру")
 Person(owner, "Владелец", "Владелец квартиры, который управляет доступом")
