@@ -3,14 +3,14 @@
 
 ## Роли для namespace
 
-| Роль  | Права роли | Группы пользователей |
-| --- | --- | --- |
-| `app-viewer` | get/list/watch ресурсов в namespace, просмотр логов | `{team}-developers` |
-| `app-deployer` | управление Deployments/ReplicaSets/StatefulSets/Jobs/CRs, чтение ConfigMap, создание/обновление Secrets (без чтения) | `{team}-devops` |
-| `config-editor` | создание и редактирование ConfigMap (без чтения секретов) | `{team}-devops` |
-| `secret-reader` | чтение секретов в namespace | `{team}-devops` (минимально) |
-| `maintenance` | rollout restart, scale, create jobs | `{team}-managers` |
-| `namespace-admin` | полный контроль внутри namespace | `{team}-devops` (lead dev/owner) |
+| Роль                   | Права роли | Группы пользователей |
+|------------------------| --- | --- |
+| `{team}-app-viewer`    | get/list/watch ресурсов в namespace, просмотр логов | `{team}-developers` |
+| `{team}-app-deployer`  | управление Deployments/ReplicaSets/StatefulSets/Jobs/CRs, чтение ConfigMap, создание/обновление Secrets (без чтения) | `{team}-devops` |
+| `{team}-config-editor` | создание и редактирование ConfigMap (без чтения секретов) | `{team}-devops` |
+| `{team}-secret-reader` | чтение секретов в namespace | `{team}-devops` (минимально) |
+| `{team}-maintenance`   | rollout restart, scale, create jobs | `{team}-managers` |
+| `{team}-admin`         | полный контроль внутри namespace | `{team}-devops` (lead dev/owner) |
 
 ## Кластерные роли
 

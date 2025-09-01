@@ -1,12 +1,16 @@
 #!/usr/bin/env bash
 BASEDIR=$(dirname "$0")
 
+# Удаляем старые данные, если есть
+kubectl delete csr alice-csr
+rm -f alice.key alice.csr alice.crt ca.crt kubeconfig_alice
+
 # Генерируем приватный ключ
 openssl genrsa -out $BASEDIR/alice.key 2048
 
 # CN=alice - Common Name (имя пользователя в Kubernetes)
-# O=sales-services-developers - Organization (группа пользователей в Kubernetes)
-openssl req -new -key $BASEDIR/alice.key -out $BASEDIR/alice.csr -subj "/CN=alice/O=sales-services-developers"
+# O=namespace-viewer -- техническая группа для просмотра списка namespace.
+openssl req -new -key $BASEDIR/alice.key -out $BASEDIR/alice.csr -subj "/CN=alice/O=namespace-viewer"
 
 # Кодируем CSR в base64 и подставляем в YAML
 CSR_B64=$(cat $BASEDIR/alice.csr | base64 | tr -d '\n')
@@ -42,3 +46,4 @@ kubectl config --kubeconfig=$KUBECONFIG_ALICE use-context alice-context
 
 echo "Kubeconfig для alice создан: $KUBECONFIG_ALICE"
 echo "Для использования: export KUBECONFIG=$KUBECONFIG_ALICE"
+

@@ -1,0 +1,34 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: sales-app-deployer
+rules:
+# Управление основными workload ресурсами
+- apiGroups: ["apps"]
+  resources:
+    - deployments
+    - replicasets
+    - statefulsets
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# Управление Jobs
+- apiGroups: ["batch"]
+  resources:
+    - jobs
+    - cronjobs
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# Чтение ConfigMaps
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch"]
+# Создание и обновление Secrets (без чтения содержимого)
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["create", "update", "patch", "delete"]
+# Просмотр подов для мониторинга деплойментов
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+# Просмотр событий для отладки
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get", "list", "watch"]
