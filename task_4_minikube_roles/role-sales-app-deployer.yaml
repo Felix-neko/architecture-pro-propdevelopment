@@ -20,10 +20,10 @@ rules:
 - apiGroups: [""]
   resources: ["configmaps"]
   verbs: ["get", "list", "watch"]
-# Создание и обновление Secrets (без чтения содержимого)
+# Управление Secrets: просмотр списка + создание/обновление (без чтения содержимого)
 - apiGroups: [""]
   resources: ["secrets"]
-  verbs: ["create", "update", "patch", "delete"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
 # Просмотр подов для мониторинга деплойментов
 - apiGroups: [""]
   resources: ["pods"]
