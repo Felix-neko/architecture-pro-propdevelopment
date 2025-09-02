@@ -49,7 +49,7 @@ python3 test_permissions.py
 
 ### Использование с конкретным kubeconfig:
 ```bash
-python3 test_permissions.py --kubeconfig kubeconfig_alice
+python3 test_permissions.py --kubeconfig kubeconfig_anton
 ```
 
 ### Примеры тестирования разных ролей:
@@ -58,13 +58,13 @@ python3 test_permissions.py --kubeconfig kubeconfig_alice
 python3 test_permissions.py
 
 # Тест с правами sales-developers (только чтение)
-python3 test_permissions.py --kubeconfig users/kubeconfig_alice
+python3 test_permissions.py --kubeconfig users/kubeconfig_anton
 
 # Тест с правами sales-devops (развертывание приложений)
-python3 test_permissions.py --kubeconfig users/kubeconfig_bob
+python3 test_permissions.py --kubeconfig users/kubeconfig_bruno
 
 # Тест с правами sales-lead-devops (чтение секретов)
-python3 test_permissions.py --kubeconfig users/kubeconfig_charlie
+python3 test_permissions.py --kubeconfig users/kubeconfig_caesar
 ```
 
 ## Интерпретация результатов

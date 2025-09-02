@@ -4,8 +4,8 @@ BASEDIR=$(dirname "$0")
 # Проверяем аргументы
 if [ $# -lt 2 ]; then
     echo "Использование: $0 <username> <group1> [group2] [group3] ... [groupN]"
-    echo "Пример: $0 alice namespace-viewer security-group"
-    echo "Пример: $0 bob sales-devops platform-admins"
+    echo "Пример: $0 anton namespace-viewer security-group"
+    echo "Пример: $0 bruno sales-devops platform-admins"
     exit 1
 fi
 

@@ -63,12 +63,19 @@ for namespace in "${SALES_NAMESPACES[@]}"; do
     kubectl apply -f $BASEDIR/role-sales-app-viewer.yaml -n $namespace
 done
 
+# Применяем роль sales-ingress-editor во всех sales namespace
+echo "Применяем роль sales-ingress-editor во всех sales namespace..."
+for namespace in "${SALES_NAMESPACES[@]}"; do
+    echo "  - Применяем в namespace: $namespace"
+    kubectl apply -f $BASEDIR/role-sales-ingress-editor.yaml -n $namespace
+done
+
 echo "=== Применение RoleBindings ==="
 
 # Применяем объединенные RoleBindings для sales-devops группы
-# Включает привязки для ролей: sales-app-deployer, sales-config-editor, sales-test-secrets-reader
+# Включает привязки для ролей: sales-app-deployer, sales-config-editor, sales-test-secrets-reader, sales-ingress-editor
 echo "Применяем объединенные RoleBindings для sales-devops группы..."
-echo "  - Включает роли: sales-app-deployer, sales-config-editor, sales-test-secrets-reader"
+echo "  - Включает роли: sales-app-deployer, sales-config-editor, sales-test-secrets-reader, sales-ingress-editor"
 kubectl apply -f $BASEDIR/rolebinding-sales-devops.yaml
 
 # Применяем RoleBindings для sales-lead-devops группы (secrets-reader)

@@ -361,6 +361,67 @@ def test_pod_operations(v1_core: client.CoreV1Api, namespaces: List[str]) -> Dic
     
     return results
 
+def test_service_operations(v1_core: client.CoreV1Api, namespaces: List[str]) -> Dict[str, Dict[str, bool]]:
+    """Тестирует операции с Service"""
+    print_header("ТЕСТ: Операции с Service")
+    
+    results = {}
+    
+    for namespace in namespaces:
+        results[namespace] = {
+            'list_services': False,
+            'create_service': False
+        }
+        
+        # Тест получения списка Services
+        try:
+            services = v1_core.list_namespaced_service(namespace=namespace)
+            print(f"{success_mark()} {namespace}: Список Services получен ({len(services.items)} шт.)")
+            results[namespace]['list_services'] = True
+        except ApiException as e:
+            print(f"{error_mark()} {namespace}: Ошибка получения списка Services - {e.reason}")
+        
+        # Тест создания Service
+        try:
+            service = client.V1Service(
+                metadata=client.V1ObjectMeta(name="test-service"),
+                spec=client.V1ServiceSpec(
+                    selector={"app": "test-app"},
+                    ports=[
+                        client.V1ServicePort(
+                            name="http",
+                            port=80,
+                            target_port=8080,
+                            protocol="TCP"
+                        )
+                    ],
+                    type="ClusterIP"
+                )
+            )
+            
+            # Попытка создать или обновить
+            try:
+                v1_core.create_namespaced_service(namespace=namespace, body=service)
+                print(f"{success_mark()} {namespace}: Service создан")
+            except ApiException as e:
+                if e.status == 409:  # Already exists
+                    # Обновляем существующий сервис
+                    v1_core.patch_namespaced_service(
+                        name="test-service", 
+                        namespace=namespace, 
+                        body=service
+                    )
+                    print(f"{success_mark()} {namespace}: Service обновлен")
+                else:
+                    raise e
+            
+            results[namespace]['create_service'] = True
+            
+        except ApiException as e:
+            print(f"{error_mark()} {namespace}: Ошибка создания Service - {e.reason}")
+    
+    return results
+
 def format_cell(content: str, width: int) -> str:
     """Форматирует ячейку таблицы с учетом ANSI кодов"""
     # Для символов ✓ и ✗ с цветными кодами используем фиксированное выравнивание
@@ -370,7 +431,7 @@ def format_cell(content: str, width: int) -> str:
     else:
         return f"{content:<{width}}"
 
-def print_results_table(namespaces: List[str], configmap_results: Dict, secret_results: Dict, pod_results: Dict):
+def print_results_table(namespaces: List[str], configmap_results: Dict, secret_results: Dict, pod_results: Dict, service_results: Dict):
     """Выводит итоговую таблицу результатов"""
     print_header("ИТОГОВАЯ ТАБЛИЦА РЕЗУЛЬТАТОВ")
     
@@ -379,7 +440,7 @@ def print_results_table(namespaces: List[str], configmap_results: Dict, secret_r
     ns_width = 20
     
     # Заголовки колонок
-    headers = ["CM Create", "CM Read", "Sec Create", "Sec List", "Sec Read", "Pod List", "Pod Create", "Pod Logs"]
+    headers = ["CM Create", "CM Read", "Sec Create", "Sec List", "Sec Read", "Pod List", "Pod Create", "Pod Logs", "Svc List", "Svc Create"]
     
     # Заголовок таблицы
     header_parts = [f"{'Namespace':<{ns_width}}"]
@@ -399,6 +460,8 @@ def print_results_table(namespaces: List[str], configmap_results: Dict, secret_r
         pod_list = "✓" if pod_results.get(namespace, {}).get('list_pods', False) else "✗"
         pod_create = "✓" if pod_results.get(namespace, {}).get('create_pod', False) else "✗"
         pod_logs = "✓" if pod_results.get(namespace, {}).get('read_pod_logs', False) else "✗"
+        svc_list = "✓" if service_results.get(namespace, {}).get('list_services', False) else "✗"
+        svc_create = "✓" if service_results.get(namespace, {}).get('create_service', False) else "✗"
         
         # Применяем цвета только при выводе
         cm_create_colored = f"{Colors.GREEN}{cm_create}{Colors.END}" if cm_create == "✓" else f"{Colors.RED}{cm_create}{Colors.END}"
@@ -409,6 +472,8 @@ def print_results_table(namespaces: List[str], configmap_results: Dict, secret_r
         pod_list_colored = f"{Colors.GREEN}{pod_list}{Colors.END}" if pod_list == "✓" else f"{Colors.RED}{pod_list}{Colors.END}"
         pod_create_colored = f"{Colors.GREEN}{pod_create}{Colors.END}" if pod_create == "✓" else f"{Colors.RED}{pod_create}{Colors.END}"
         pod_logs_colored = f"{Colors.GREEN}{pod_logs}{Colors.END}" if pod_logs == "✓" else f"{Colors.RED}{pod_logs}{Colors.END}"
+        svc_list_colored = f"{Colors.GREEN}{svc_list}{Colors.END}" if svc_list == "✓" else f"{Colors.RED}{svc_list}{Colors.END}"
+        svc_create_colored = f"{Colors.GREEN}{svc_create}{Colors.END}" if svc_create == "✓" else f"{Colors.RED}{svc_create}{Colors.END}"
         
         # Форматируем строку с правильным выравниванием
         row_parts = [f"{namespace:<{ns_width}}"]
@@ -420,7 +485,9 @@ def print_results_table(namespaces: List[str], configmap_results: Dict, secret_r
             format_cell(sec_read_colored, col_width),
             format_cell(pod_list_colored, col_width),
             format_cell(pod_create_colored, col_width),
-            format_cell(pod_logs_colored, col_width)
+            format_cell(pod_logs_colored, col_width),
+            format_cell(svc_list_colored, col_width),
+            format_cell(svc_create_colored, col_width)
         ])
         row = " | ".join(row_parts)
         print(row)
@@ -433,7 +500,7 @@ def main():
         epilog="""
 Примеры использования:
   python3 test_permissions.py                           # Использовать kubeconfig по умолчанию
-  python3 test_permissions.py --kubeconfig kubeconfig_alice  # Использовать конкретный kubeconfig
+  python3 test_permissions.py --kubeconfig kubeconfig_anton  # Использовать конкретный kubeconfig
         """
     )
     
@@ -470,9 +537,10 @@ def main():
     configmap_results = test_configmap_operations(v1_core, target_namespaces)
     secret_results = test_secret_operations(v1_core, target_namespaces)
     pod_results = test_pod_operations(v1_core, target_namespaces)
+    service_results = test_service_operations(v1_core, target_namespaces)
     
     # Вывод итоговой таблицы
-    print_results_table(target_namespaces, configmap_results, secret_results, pod_results)
+    print_results_table(target_namespaces, configmap_results, secret_results, pod_results, service_results)
     
     print(f"\n{Colors.BOLD}Тестирование завершено!{Colors.END}")
     print(f"Легенда: {success_mark()} - успех, {error_mark()} - ошибка")
