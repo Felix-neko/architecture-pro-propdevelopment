@@ -1,3 +1,4 @@
+# GENERATED WITH CLAUDE SONNET 4
 # Kubernetes Permission Testing Script
 
 Скрипт для тестирования прав доступа пользователей Kubernetes в различных namespace.

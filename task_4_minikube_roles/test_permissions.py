@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """
+# GENERATED WITH CLAUDE SONNET 4
 Kubernetes Permission Testing Script
 
 Тестирует различные операции Kubernetes для проверки прав доступа пользователей.

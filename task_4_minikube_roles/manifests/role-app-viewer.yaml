@@ -1,7 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: sales-app-viewer
+  name: app-viewer
   # Роль для просмотра ресурсов в пространствах sales-services-*
   # Предназначена для разработчиков с правами только на чтение
 rules:

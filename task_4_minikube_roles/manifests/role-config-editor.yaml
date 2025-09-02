@@ -1,7 +1,7 @@
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
-  name: sales-config-editor
+  name: config-editor
   # Роль для полного управления ConfigMap в пространствах sales-services-*
   # Исключает доступ к секретам для безопасности
 rules:
