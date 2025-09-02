@@ -1,0 +1,126 @@
+# NetworkPolicy для ограничения трафика между сервисами
+# Разрешает доступ только между определенными парами сервисов по меткам
+
+---
+# NetworkPolicy для backend сервисов
+# Разрешает входящий трафик только от frontend сервисов
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: backend-ingress-policy
+spec:
+  podSelector:
+    matchLabels:
+      role: backend
+      app: backend
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          role: frontend
+          app: frontend
+    ports:
+    - protocol: TCP
+      port: 80
+
+---
+# NetworkPolicy для admin-backend сервисов  
+# Разрешает входящий трафик только от admin-frontend сервисов
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: admin-backend-ingress-policy
+spec:
+  podSelector:
+    matchLabels:
+      role: admin-backend
+      app: admin-backend
+  policyTypes:
+  - Ingress
+  ingress:
+  - from:
+    - podSelector:
+        matchLabels:
+          role: admin-frontend
+          app: admin-frontend
+    ports:
+    - protocol: TCP
+      port: 80
+
+---
+# NetworkPolicy для frontend сервисов
+# Разрешает исходящий трафик только к backend сервисам
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: frontend-egress-policy
+spec:
+  podSelector:
+    matchLabels:
+      role: frontend
+      app: frontend
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          role: backend
+          app: backend
+    ports:
+    - protocol: TCP
+      port: 80
+  # Разрешаем DNS запросы
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+
+---
+# NetworkPolicy для admin-frontend сервисов
+# Разрешает исходящий трафик только к admin-backend сервисам
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: admin-frontend-egress-policy
+spec:
+  podSelector:
+    matchLabels:
+      role: admin-frontend
+      app: admin-frontend
+  policyTypes:
+  - Egress
+  egress:
+  - to:
+    - podSelector:
+        matchLabels:
+          role: admin-backend
+          app: admin-backend
+    ports:
+    - protocol: TCP
+      port: 80
+  # Разрешаем DNS запросы
+  - to: []
+    ports:
+    - protocol: UDP
+      port: 53
+
+---
+# Общая NetworkPolicy для блокировки всего остального трафика
+# Применяется ко всем подам в namespace и блокирует весь трафик по умолчанию
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-all
+spec:
+  podSelector: {}  # Применяется ко всем подам
+  policyTypes:
+  - Ingress
+  - Egress
+
+#В манифесте NetworkPolicy нигде явно не написано «блокировать трафик». В Kubernetes это работает по принципу "default allow" → "explicit allow only if есть NetworkPolicy":
+#Если в namespace нет NetworkPolicy, то весь трафик (Ingress и Egress) разрешён.
+#Как только появляется хотя бы одна NetworkPolicy для pod'а, Kubernetes начинает применять whitelist-логику: разрешено только то, что явно указано в правилах.
+#Всё остальное блокируется.
