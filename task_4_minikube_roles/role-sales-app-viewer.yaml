@@ -1,0 +1,56 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: sales-app-viewer
+  # Роль для просмотра ресурсов в пространствах sales-services-*
+  # Предназначена для разработчиков с правами только на чтение
+rules:
+# Просмотр основных workload ресурсов (Deployments, ReplicaSets, StatefulSets)
+# Необходимо для мониторинга состояния приложений
+- apiGroups: ["apps"]
+  resources:
+    - deployments
+    - replicasets
+    - statefulsets
+  verbs: ["get", "list", "watch"]
+
+# Просмотр Jobs и CronJobs для отслеживания выполнения задач
+- apiGroups: ["batch"]
+  resources:
+    - jobs
+    - cronjobs
+  verbs: ["get", "list", "watch"]
+
+# Просмотр ConfigMaps для понимания конфигурации приложений
+# Полезно для разработчиков при отладке
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch"]
+
+# Просмотр подов и их статуса
+# Критично для мониторинга работы приложений
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+
+# Просмотр логов подов для отладки приложений
+# Важно для диагностики проблем разработчиками
+- apiGroups: [""]
+  resources: ["pods/log"]
+  verbs: ["get", "list"]
+
+# Просмотр событий кластера для понимания проблем
+# Помогает в диагностике ошибок развертывания и работы приложений
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get", "list", "watch"]
+
+# Просмотр сервисов для понимания сетевой архитектуры
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list", "watch"]
+
+# Просмотр Ingress для понимания маршрутизации трафика
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get", "list", "watch"]

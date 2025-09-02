@@ -2,33 +2,46 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   name: sales-app-deployer
+  # Роль для развертывания и управления приложениями в sales пространствах
+  # Предоставляет полные права на управление workload ресурсами
 rules:
-# Управление основными workload ресурсами
+# Управление основными workload ресурсами (Deployments, ReplicaSets, StatefulSets)
+# Необходимо для развертывания и масштабирования приложений
 - apiGroups: ["apps"]
   resources:
     - deployments
     - replicasets
     - statefulsets
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-# Управление Jobs
+
+# Управление Jobs и CronJobs для выполнения задач и планировщика
+# Позволяет создавать и управлять периодическими и разовыми задачами
 - apiGroups: ["batch"]
   resources:
     - jobs
     - cronjobs
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-# Чтение ConfigMaps
+
+# Чтение ConfigMaps для получения конфигурации приложений
+# Только чтение - изменение конфигураций через отдельную роль sales-config-editor
 - apiGroups: [""]
   resources: ["configmaps"]
   verbs: ["get", "list", "watch"]
-# Управление Secrets: просмотр списка + создание/обновление (без чтения содержимого)
+
+# Управление Secrets: создание, обновление, удаление
+# Включает просмотр списка и метаданных, но не содержимого секретов
 - apiGroups: [""]
   resources: ["secrets"]
   verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
-# Просмотр подов для мониторинга деплойментов
+
+# Просмотр подов для мониторинга состояния деплойментов
+# Необходимо для отладки и проверки статуса приложений
 - apiGroups: [""]
   resources: ["pods"]
   verbs: ["get", "list", "watch"]
-# Просмотр событий для отладки
+
+# Просмотр событий кластера для отладки проблем развертывания
+# Помогает диагностировать ошибки при создании ресурсов
 - apiGroups: [""]
   resources: ["events"]
   verbs: ["get", "list", "watch"]
