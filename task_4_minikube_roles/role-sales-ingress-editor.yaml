@@ -1,0 +1,30 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: sales-ingress-editor
+  # Роль для управления ingress и services в пространствах sales-services-*
+  # Предназначена для DevOps команды, которая настраивает сетевую маршрутизацию
+rules:
+# Управление Services для настройки внутренней сетевой связности
+# Необходимо для создания, изменения и удаления сервисов приложений
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+# Управление Ingress для настройки внешней маршрутизации трафика
+# Критично для настройки доступа к приложениям извне кластера
+- apiGroups: ["networking.k8s.io"]
+  resources: ["ingresses"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+# Просмотр Endpoints для понимания состояния сервисов
+# Помогает в диагностике проблем с сетевой связностью
+- apiGroups: [""]
+  resources: ["endpoints"]
+  verbs: ["get", "list", "watch"]
+
+# Просмотр событий для диагностики проблем с ingress и services
+# Важно для отладки проблем с сетевой конфигурацией
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get", "list", "watch"]

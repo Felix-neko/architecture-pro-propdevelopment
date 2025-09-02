@@ -76,3 +76,52 @@ roleRef:
   kind: Role
   name: sales-app-viewer
   apiGroup: rbac.authorization.k8s.io
+
+# ===== SALES-TEST-SECRETS-READER ROLEBINDINGS FOR SALES-DEVELOPERS =====
+# RoleBinding для чтения секретов группой sales-developers только в тестовых пространствах
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sales-developers-secrets-reader-binding
+  namespace: sales-services-test1
+  # Привязка для чтения секретов группой sales-developers в test1
+subjects:
+- kind: Group
+  name: sales-developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: sales-test-secrets-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sales-developers-secrets-reader-binding
+  namespace: sales-services-test2
+  # Привязка для чтения секретов группой sales-developers в test2
+subjects:
+- kind: Group
+  name: sales-developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: sales-test-secrets-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sales-developers-secrets-reader-binding
+  namespace: sales-services-test3
+  # Привязка для чтения секретов группой sales-developers в test3
+subjects:
+- kind: Group
+  name: sales-developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: sales-test-secrets-reader
+  apiGroup: rbac.authorization.k8s.io
