@@ -1,0 +1,105 @@
+# ConstraintTemplate для проверки безопасности подов
+apiVersion: templates.gatekeeper.sh/v1beta1
+kind: ConstraintTemplate
+metadata:
+  name: podsecuritypolicy
+  annotations:
+    description: "Проверяет безопасность подов: запрещает privileged, требует runAsNonRoot и readOnlyRootFilesystem, запрещает hostPath"
+spec:
+  crd:
+    spec:
+      names:
+        kind: PodSecurityPolicy
+      validation:
+        openAPIV3Schema:
+          type: object
+          properties:
+            targetNamespace:
+              type: string
+              description: "Namespace для проверки политик безопасности"
+          required:
+            - targetNamespace
+  targets:
+    - target: admission.k8s.gatekeeper.sh
+      rego: |
+        package podsecuritypolicy
+
+        # Проверяем только поды в указанном namespace
+        is_target_namespace {
+          input.review.object.metadata.namespace == input.parameters.targetNamespace
+        }
+
+        # Проверка privileged контейнеров на уровне pod
+        violation[{"msg": msg}] {
+          is_target_namespace
+          input.review.object.spec.securityContext.privileged == true
+          msg := "Pod security context не должен содержать privileged: true"
+        }
+
+        # Проверка privileged контейнеров на уровне container
+        violation[{"msg": msg}] {
+          is_target_namespace
+          container := input.review.object.spec.containers[_]
+          container.securityContext.privileged == true
+          msg := sprintf("Контейнер '%v' не должен иметь privileged: true", [container.name])
+        }
+
+        # Проверка privileged в initContainers
+        violation[{"msg": msg}] {
+          is_target_namespace
+          container := input.review.object.spec.initContainers[_]
+          container.securityContext.privileged == true
+          msg := sprintf("InitContainer '%v' не должен иметь privileged: true", [container.name])
+        }
+
+        # Проверка runAsNonRoot на уровне pod
+        violation[{"msg": msg}] {
+          is_target_namespace
+          pod_security := input.review.object.spec.securityContext
+          # Проверяем, что runAsNonRoot либо отсутствует, либо не равно true
+          not pod_security.runAsNonRoot == true
+          msg := "Pod security context должен содержать runAsNonRoot: true"
+        }
+
+        # Проверка runAsUser: не должен быть 0 (root)
+        violation[{"msg": msg}] {
+          is_target_namespace
+          pod_security := input.review.object.spec.securityContext
+          pod_security.runAsUser == 0
+          msg := "Pod security context не должен содержать runAsUser: 0 (root)"
+        }
+
+        # Проверка runAsUser на уровне container
+        violation[{"msg": msg}] {
+          is_target_namespace
+          container := input.review.object.spec.containers[_]
+          container_security := container.securityContext
+          container_security.runAsUser == 0
+          msg := sprintf("Контейнер '%v' не должен иметь runAsUser: 0 (root)", [container.name])
+        }
+
+        # Проверка readOnlyRootFilesystem на уровне container
+        violation[{"msg": msg}] {
+          is_target_namespace
+          container := input.review.object.spec.containers[_]
+          container_security := container.securityContext
+          container_security.readOnlyRootFilesystem != true
+          msg := sprintf("Контейнер '%v' должен иметь readOnlyRootFilesystem: true", [container.name])
+        }
+
+        # Проверка readOnlyRootFilesystem в initContainers
+        violation[{"msg": msg}] {
+          is_target_namespace
+          container := input.review.object.spec.initContainers[_]
+          container_security := container.securityContext
+          container_security.readOnlyRootFilesystem != true
+          msg := sprintf("InitContainer '%v' должен иметь readOnlyRootFilesystem: true", [container.name])
+        }
+
+        # Проверка запрета hostPath volumes
+        violation[{"msg": msg}] {
+          is_target_namespace
+          volume := input.review.object.spec.volumes[_]
+          volume.hostPath
+          msg := sprintf("Volume '%v' не должен использовать hostPath", [volume.name])
+        }

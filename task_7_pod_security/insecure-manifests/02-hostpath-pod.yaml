@@ -1,0 +1,31 @@
+# 02-hostpath-pod.yaml
+# Под с монтированием файловой системы хоста
+apiVersion: v1
+kind: Pod
+metadata:
+  name: hostpath-nginx
+  labels:
+    app: hostpath-nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:alpine
+    ports:
+    - containerPort: 80
+    volumeMounts:
+    - name: host-root
+      mountPath: /host-root
+      readOnly: false  # НЕБЕЗОПАСНО: запись в корень хоста
+    - name: host-etc
+      mountPath: /host-etc
+      readOnly: false  # НЕБЕЗОПАСНО: доступ к /etc хоста
+  volumes:
+  - name: host-root
+    hostPath:
+      path: /  # НЕБЕЗОПАСНО: монтирование корневой ФС
+      type: Directory
+  - name: host-etc
+    hostPath:
+      path: /etc  # НЕБЕЗОПАСНО: доступ к конфигурации хоста
+      type: Directory
+  restartPolicy: Always

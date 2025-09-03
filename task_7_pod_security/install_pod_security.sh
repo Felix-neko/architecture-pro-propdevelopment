@@ -1,0 +1,1 @@
+kubectl label --overwrite ns pod-security pod-security.kubernetes.io/enforce=restricted
