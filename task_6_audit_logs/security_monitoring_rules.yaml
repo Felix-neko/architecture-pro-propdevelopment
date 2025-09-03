@@ -1,0 +1,185 @@
+# Правила мониторинга и алертинга для оптимизированной политики аудита
+# Эти правила можно использовать с системами мониторинга типа Prometheus/Grafana или SIEM
+
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: security-monitoring-rules
+  namespace: kube-system
+data:
+  # Критические алерты безопасности
+  critical-alerts.yaml: |
+    groups:
+      - name: kubernetes-security-critical
+        rules:
+          # Создание привилегированного пода
+          - alert: PrivilegedPodCreated
+            expr: |
+              increase(kubernetes_audit_events_total{
+                verb="create",
+                objectRef_resource="pods",
+                requestObject_spec_containers_securityContext_privileged="true"
+              }[5m]) > 0
+            for: 0m
+            labels:
+              severity: critical
+              category: security
+            annotations:
+              summary: "Создан привилегированный под"
+              description: "Пользователь {{ $labels.user_username }} создал привилегированный под {{ $labels.objectRef_name }} в namespace {{ $labels.objectRef_namespace }}"
+
+          # Эскалация привилегий через RoleBinding
+          - alert: PrivilegeEscalation
+            expr: |
+              increase(kubernetes_audit_events_total{
+                verb="create",
+                objectRef_resource="rolebindings",
+                requestObject_roleRef_name="cluster-admin"
+              }[5m]) > 0
+            for: 0m
+            labels:
+              severity: critical
+              category: security
+            annotations:
+              summary: "Обнаружена эскалация привилегий"
+              description: "Создан RoleBinding {{ $labels.objectRef_name }} с правами cluster-admin для {{ $labels.requestObject_subjects_name }}"
+
+          # Попытка доступа к системным секретам
+          - alert: SystemSecretsAccess
+            expr: |
+              increase(kubernetes_audit_events_total{
+                verb=~"get|list",
+                objectRef_resource="secrets",
+                objectRef_namespace=~"kube-system|kube-public"
+              }[5m]) > 0
+            for: 0m
+            labels:
+              severity: high
+              category: security
+            annotations:
+              summary: "Попытка доступа к системным секретам"
+              description: "Пользователь {{ $labels.user_username }} пытался получить доступ к секретам в {{ $labels.objectRef_namespace }}"
+
+      - name: kubernetes-security-warning
+        rules:
+          # Создание подозрительного namespace
+          - alert: SuspiciousNamespaceCreated
+            expr: |
+              increase(kubernetes_audit_events_total{
+                verb="create",
+                objectRef_resource="namespaces",
+                objectRef_name=~".*ops.*|.*admin.*|.*system.*|.*security.*"
+              }[5m]) > 0
+            for: 0m
+            labels:
+              severity: warning
+              category: security
+            annotations:
+              summary: "Создан подозрительный namespace"
+              description: "Создан namespace {{ $labels.objectRef_name }} с подозрительным именем"
+
+          # Множественные отказы в авторизации
+          - alert: MultipleAuthorizationFailures
+            expr: |
+              increase(kubernetes_audit_events_total{
+                annotations_authorization_k8s_io_decision="forbid"
+              }[5m]) > 5
+            for: 2m
+            labels:
+              severity: warning
+              category: security
+            annotations:
+              summary: "Множественные отказы в авторизации"
+              description: "Пользователь {{ $labels.user_username }} получил {{ $value }} отказов в авторизации за последние 5 минут"
+
+  # Дашборд для Grafana
+  grafana-dashboard.json: |
+    {
+      "dashboard": {
+        "title": "Kubernetes Security Audit Dashboard",
+        "panels": [
+          {
+            "title": "Критические события безопасности",
+            "type": "stat",
+            "targets": [
+              {
+                "expr": "sum(rate(kubernetes_audit_events_total{verb=\"create\",objectRef_resource=~\"rolebindings|clusterrolebindings\"}[5m]))",
+                "legendFormat": "RBAC Changes"
+              },
+              {
+                "expr": "sum(rate(kubernetes_audit_events_total{verb=\"create\",objectRef_resource=\"pods\",requestObject_spec_containers_securityContext_privileged=\"true\"}[5m]))",
+                "legendFormat": "Privileged Pods"
+              }
+            ]
+          },
+          {
+            "title": "Топ пользователей по активности",
+            "type": "table",
+            "targets": [
+              {
+                "expr": "topk(10, sum by (user_username) (rate(kubernetes_audit_events_total[5m])))",
+                "format": "table"
+              }
+            ]
+          },
+          {
+            "title": "Отказы в авторизации по времени",
+            "type": "graph",
+            "targets": [
+              {
+                "expr": "sum(rate(kubernetes_audit_events_total{annotations_authorization_k8s_io_decision=\"forbid\"}[5m])) by (user_username)",
+                "legendFormat": "{{ user_username }}"
+              }
+            ]
+          }
+        ]
+      }
+    }
+
+---
+# Пример интеграции с Falco для runtime безопасности
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: falco-security-rules
+  namespace: falco-system
+data:
+  custom_rules.yaml: |
+    - rule: Kubernetes Audit Privilege Escalation
+      desc: Detect privilege escalation in Kubernetes audit logs
+      condition: >
+        ka and
+        ka.verb in (create, update, patch) and
+        ka.target.resource=rolebindings and
+        ka.req.binding.role=cluster-admin
+      output: >
+        Privilege escalation detected (user=%ka.user.name verb=%ka.verb 
+        target=%ka.target.name role=%ka.req.binding.role)
+      priority: CRITICAL
+      tags: [kubernetes, rbac, privilege_escalation]
+
+    - rule: Kubernetes Audit Privileged Pod Creation
+      desc: Detect creation of privileged pods
+      condition: >
+        ka and
+        ka.verb=create and
+        ka.target.resource=pods and
+        ka.req.pod.privileged=true
+      output: >
+        Privileged pod created (user=%ka.user.name pod=%ka.target.name 
+        namespace=%ka.target.namespace)
+      priority: HIGH
+      tags: [kubernetes, pod, privileged]
+
+    - rule: Kubernetes Audit System Secrets Access
+      desc: Detect access to system secrets
+      condition: >
+        ka and
+        ka.verb in (get, list) and
+        ka.target.resource=secrets and
+        ka.target.namespace in (kube-system, kube-public)
+      output: >
+        System secrets access attempt (user=%ka.user.name 
+        namespace=%ka.target.namespace verb=%ka.verb)
+      priority: HIGH
+      tags: [kubernetes, secrets, system]
