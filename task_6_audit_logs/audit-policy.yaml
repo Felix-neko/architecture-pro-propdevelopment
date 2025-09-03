@@ -10,5 +10,25 @@ rules:
         resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
   - level: Metadata
     resources:
-      - group: "*"
+      - group: ""
+        resources: ["*"]
+      - group: "apps"
+        resources: ["*"]
+      - group: "autoscaling"
+        resources: ["*"]
+      - group: "batch"
+        resources: ["*"]
+      - group: "certificates.k8s.io"
+        resources: ["*"]
+      - group: "events.k8s.io"
+        resources: ["*"]
+      - group: "networking.k8s.io"
+        resources: ["*"]
+      - group: "policy"
+        resources: ["*"]
+      - group: "scheduling.k8s.io"
+        resources: ["*"]
+      - group: "storage.k8s.io"
+        resources: ["*"]
+      - group: "apiextensions.k8s.io"
         resources: ["*"]

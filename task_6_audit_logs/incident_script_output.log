@@ -1,0 +1,11 @@
+namespace/secure-ops created
+Context "minikube" modified.
+serviceaccount/monitoring created
+pod/attacker-pod created
+no
+Error from server (Forbidden): secrets is forbidden: User "system:serviceaccount:secure-ops:monitoring" cannot list resource "secrets" in API group "" in the namespace "kube-system"
+pod/privileged-pod created
+OCI runtime exec failed: exec failed: unable to start container process: exec: "cat": executable file not found in $PATH: unknown
+command terminated with exit code 127
+error: the path "/etc/ssl/certs/audit-policy.yaml" does not exist
+rolebinding.rbac.authorization.k8s.io/escalate-binding created
