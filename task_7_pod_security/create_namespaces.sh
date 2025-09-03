@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 BASEDIR=$(dirname "$0")
 
+# Пространство, без контроля привилегий
 kubectl create namespace insecure
 
 # Пространство, контролируемое PodSecurity
