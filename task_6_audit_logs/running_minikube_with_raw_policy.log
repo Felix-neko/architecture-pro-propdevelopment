@@ -1,0 +1,96 @@
+🔥  Deleting "minikube" in docker ...
+🔥  Deleting container "minikube" ...
+🔥  Removing /home/felix/.minikube/machines/minikube ...
+💀  Removed all traces of the "minikube" cluster.
+[sudo] password for felix:
+fs.inotify.max_user_watches = 524288
+fs.inotify.max_user_instances = 512
+🤷  Profile "minikube" not found. Run "minikube profile list" to view all profiles.
+👉  To start a cluster, run: "minikube start"
+😄  minikube v1.36.0 on Ubuntu 24.04
+✨  Using the docker driver based on user configuration
+📌  Using Docker driver with root privileges
+👍  Starting "minikube" primary control-plane node in "minikube" cluster
+🚜  Pulling base image v0.0.47 ...
+🔥  Creating docker container (CPUs=4, Memory=16384MB) ...
+🌐  Found network options:
+    ▪ NO_PROXY=127.0.0.1,localhost
+🐳  Preparing Kubernetes v1.33.1 on Docker 28.1.1 ...
+    ▪ env NO_PROXY=127.0.0.1,localhost
+    ▪ apiserver.audit-policy-file=/etc/ssl/certs/audit-policy-raw.yaml
+    ▪ apiserver.audit-log-path=-
+    ▪ Generating certificates and keys ...
+    ▪ Booting up control plane ...
+💢  initialization failed, will try again: wait: /bin/bash -c "sudo env PATH="/var/lib/minikube/binaries/v1.33.1:$PATH" kubeadm init --config /var/tmp/minikube/kubeadm.yaml  --ignore-preflight-errors=DirAvailable--etc-kubernetes-manifests,DirAvailable--var-lib-minikube,DirAvailable--var-lib-minikube-etcd,FileAvailable--etc-kubernetes-manifests-kube-scheduler.yaml,FileAvailable--etc-kubernetes-manifests-kube-apiserver.yaml,FileAvailable--etc-kubernetes-manifests-kube-controller-manager.yaml,FileAvailable--etc-kubernetes-manifests-etcd.yaml,Port-10250,Swap,NumCPU,Mem,SystemVerification,FileContent--proc-sys-net-bridge-bridge-nf-call-iptables": Process exited with status 1
+stdout:
+[init] Using Kubernetes version: v1.33.1
+[preflight] Running pre-flight checks
+[preflight] The system verification failed. Printing the output from the verification:
+KERNEL_VERSION: 6.8.0-78-generic
+OS: Linux
+CGROUPS_CPU: enabled
+CGROUPS_CPUSET: enabled
+CGROUPS_DEVICES: enabled
+CGROUPS_FREEZER: enabled
+CGROUPS_MEMORY: enabled
+CGROUPS_PIDS: enabled
+CGROUPS_HUGETLB: enabled
+CGROUPS_IO: enabled
+[preflight] Pulling images required for setting up a Kubernetes cluster
+[preflight] This might take a minute or two, depending on the speed of your internet connection
+[preflight] You can also perform this action beforehand using 'kubeadm config images pull'
+[certs] Using certificateDir folder "/var/lib/minikube/certs"
+[certs] Using existing ca certificate authority
+[certs] Using existing apiserver certificate and key on disk
+[certs] Generating "apiserver-kubelet-client" certificate and key
+[certs] Generating "front-proxy-ca" certificate and key
+[certs] Generating "front-proxy-client" certificate and key
+[certs] Generating "etcd/ca" certificate and key
+[certs] Generating "etcd/server" certificate and key
+[certs] etcd/server serving cert is signed for DNS names [localhost minikube] and IPs [192.168.49.2 127.0.0.1 ::1]
+[certs] Generating "etcd/peer" certificate and key
+[certs] etcd/peer serving cert is signed for DNS names [localhost minikube] and IPs [192.168.49.2 127.0.0.1 ::1]
+[certs] Generating "etcd/healthcheck-client" certificate and key
+[certs] Generating "apiserver-etcd-client" certificate and key
+[certs] Generating "sa" key and public key
+[kubeconfig] Using kubeconfig folder "/etc/kubernetes"
+[kubeconfig] Writing "admin.conf" kubeconfig file
+[kubeconfig] Writing "super-admin.conf" kubeconfig file
+[kubeconfig] Writing "kubelet.conf" kubeconfig file
+[kubeconfig] Writing "controller-manager.conf" kubeconfig file
+[kubeconfig] Writing "scheduler.conf" kubeconfig file
+[etcd] Creating static Pod manifest for local etcd in "/etc/kubernetes/manifests"
+[control-plane] Using manifest folder "/etc/kubernetes/manifests"
+[control-plane] Creating static Pod manifest for "kube-apiserver"
+[control-plane] Creating static Pod manifest for "kube-controller-manager"
+[control-plane] Creating static Pod manifest for "kube-scheduler"
+[kubelet-start] Writing kubelet environment file with flags to file "/var/lib/kubelet/kubeadm-flags.env"
+[kubelet-start] Writing kubelet configuration to file "/var/lib/kubelet/config.yaml"
+[kubelet-start] Starting the kubelet
+[wait-control-plane] Waiting for the kubelet to boot up the control plane as static Pods from directory "/etc/kubernetes/manifests"
+[kubelet-check] Waiting for a healthy kubelet at http://127.0.0.1:10248/healthz. This can take up to 4m0s
+[kubelet-check] The kubelet is healthy after 1.000834801s
+[control-plane-check] Waiting for healthy control plane components. This can take up to 4m0s
+[control-plane-check] Checking kube-apiserver at https://192.168.49.2:8443/livez
+[control-plane-check] Checking kube-controller-manager at https://127.0.0.1:10257/healthz
+[control-plane-check] Checking kube-scheduler at https://127.0.0.1:10259/livez
+[control-plane-check] kube-controller-manager is healthy after 1.276854232s
+[control-plane-check] kube-scheduler is healthy after 1.733830505s
+[control-plane-check] kube-apiserver is not healthy after 4m0.000365059s
+
+A control plane component may have crashed or exited when started by the container runtime.
+To troubleshoot, list all containers using your preferred container runtimes CLI.
+Here is one example how you may list all running Kubernetes containers by using crictl:
+        - 'crictl --runtime-endpoint unix:///var/run/cri-dockerd.sock ps -a | grep kube | grep -v pause'
+        Once you have found the failing container, you can inspect its logs with:
+        - 'crictl --runtime-endpoint unix:///var/run/cri-dockerd.sock logs CONTAINERID'
+
+
+stderr:
+        [WARNING Swap]: swap is supported for cgroup v2 only. The kubelet must be properly configured to use swap. Please refer to https://kubernetes.io/docs/concepts/architecture/nodes/#swap-memory, or disable swap on the node
+        [WARNING SystemVerification]: failed to parse kernel config: unable to load kernel module: "configs", output: "modprobe: FATAL: Module configs not found in directory /lib/modules/6.8.0-78-generic\n", err: exit status 1
+        [WARNING Service-Kubelet]: kubelet service is not enabled, please run 'systemctl enable kubelet.service'
+error execution phase wait-control-plane: failed while waiting for the control plane to start: kube-apiserver check failed at https://192.168.49.2:8443/livez: client rate limiter Wait returned an error: rate: Wait(n=1) would exceed context deadline
+To see the stack trace of this error execute with --v=5 or higher
+
+

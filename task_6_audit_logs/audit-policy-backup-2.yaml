@@ -9,7 +9,7 @@ rules:
         resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
       - group: ""
         resources: ["serviceaccounts"]
-    # Убираем ограничение по namespaces для полного покрытия RBAC операций
+    namespaces: ["kube-system", "kube-public", "default"]
     omitStages: ["RequestReceived"]
 
   # Привилегированные поды и секреты - полное логирование
@@ -18,14 +18,6 @@ rules:
     resources:
       - group: ""
         resources: ["pods", "secrets"]
-    omitStages: ["RequestReceived"]
-
-  # Логирование exec операций в pod'ах (lateral movement detection)
-  - level: Request
-    verbs: ["create"]
-    resources:
-      - group: ""
-        resources: ["pods/exec", "pods/attach", "pods/portforward"]
     omitStages: ["RequestReceived"]
 
   # Подозрительные операции с секретами - логирование запросов
@@ -37,17 +29,6 @@ rules:
     namespaces: ["kube-system", "kube-public"]
     omitStages: ["RequestReceived"]
 
-  # Логирование операций с impersonation (--as флаг)
-  # Правило для основных ресурсов при использовании impersonation
-  - level: Request
-    verbs: ["get", "list", "create", "update", "patch", "delete"]
-    omitStages: ["RequestReceived"]
-    resources:
-      - group: ""
-        resources: ["secrets", "configmaps", "pods", "services"]
-      - group: "rbac.authorization.k8s.io"
-        resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
-
   # Создание namespace - потенциальная подготовка к атаке
   - level: RequestResponse
     verbs: ["create", "delete"]
@@ -56,19 +37,11 @@ rules:
         resources: ["namespaces"]
     omitStages: ["RequestReceived"]
 
-  # Логирование операций с auth can-i (проверка прав доступа)
-  - level: Request
-    verbs: ["create"]
-    resources:
-      - group: "authorization.k8s.io"
-        resources: ["selfsubjectaccessreviews", "subjectaccessreviews"]
-    omitStages: ["RequestReceived"]
-
   # Исключаем системные компоненты из рутинных операций
   - level: None
-    users: 
+    users:
       - "system:kube-controller-manager"
-      - "system:kube-scheduler" 
+      - "system:kube-scheduler"
       - "system:node:minikube"
       - "system:serviceaccount:kube-system:storage-provisioner"
       - "system:serviceaccount:kube-system:deployment-controller"

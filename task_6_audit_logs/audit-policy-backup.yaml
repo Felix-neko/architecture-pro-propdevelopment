@@ -1,34 +1,58 @@
+# Версия API для конфигурации аудитирования Kubernetes
 apiVersion: audit.k8s.io/v1
+# Тип ресурса - политика аудитирования
 kind: Policy
+# Список правил аудитирования (обрабатываются по порядку)
 rules:
-  - level: RequestResponse
+  # Первое правило - детальное логирование критических операций
+  - level: RequestResponse  # Уровень аудита: логировать запрос И ответ
+    # Список HTTP методов, которые будут аудироваться
     verbs: ["create", "delete", "update", "patch", "get", "list"]
+    # Ресурсы, к которым применяется это правило
     resources:
+      # Ресурсы из core API группы (пустая строка означает core group)
       - group: ""
+        # Критически важные ресурсы кластера
         resources: ["pods", "secrets", "configmaps", "serviceaccounts"]
+      # Ресурсы RBAC (управление доступом на основе ролей)
       - group: "rbac.authorization.k8s.io"
+        # Все типы ролей и привязок ролей
         resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
-  - level: Metadata
+
+  # Второе правило - облегченное логирование для всех остальных ресурсов
+  - level: Metadata  # Уровень аудита: логировать только метаданные (без тела запроса/ответа)
+    # Ресурсы для облегченного аудитирования
     resources:
+      # Все ресурсы из core API группы
       - group: ""
-        resources: ["*"]
+        resources: ["*"]  # Звездочка означает "все ресурсы"
+      # Группа приложений (Deployments, ReplicaSets и т.д.)
       - group: "apps"
         resources: ["*"]
+      # Группа автомасштабирования (HPA, VPA)
       - group: "autoscaling"
         resources: ["*"]
+      # Группа пакетных заданий (Jobs, CronJobs)
       - group: "batch"
         resources: ["*"]
+      # Группа сертификатов
       - group: "certificates.k8s.io"
         resources: ["*"]
+      # Группа событий
       - group: "events.k8s.io"
         resources: ["*"]
+      # Группа сетевых ресурсов (NetworkPolicies, Ingress)
       - group: "networking.k8s.io"
         resources: ["*"]
+      # Группа политик безопасности
       - group: "policy"
         resources: ["*"]
+      # Группа планировщика заданий
       - group: "scheduling.k8s.io"
         resources: ["*"]
+      # Группа ресурсов хранения (StorageClasses, PVs)
       - group: "storage.k8s.io"
         resources: ["*"]
+      # Группа пользовательских расширений API
       - group: "apiextensions.k8s.io"
         resources: ["*"]
