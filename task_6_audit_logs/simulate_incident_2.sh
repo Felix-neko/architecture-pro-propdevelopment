@@ -65,7 +65,7 @@ kubectl exec -n kube-system $(kubectl get pods -n kube-system | grep coredns | a
 # === ПОПЫТКА НАРУШЕНИЯ АУДИТА ===
 # Пытаемся удалить policy аудита от имени admin пользователя
 # Это может нарушить логирование и мониторинг безопасности
-run_cmd kubectl delete -f /etc/ssl/certs/audit-policy.yaml --as=admin
+run_cmd kubectl delete -f /etc/ssl/certs/audit-policy-raw.yaml --as=admin
 
 # === ЭСКАЛАЦИЯ ПРИВИЛЕГИЙ (САМАЯ КРИТИЧЕСКАЯ АТАКА) ===
 # Создаем RoleBinding, который дает service account "monitoring"

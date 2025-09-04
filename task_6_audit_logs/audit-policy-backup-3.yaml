@@ -1,0 +1,115 @@
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+  # КРИТИЧЕСКИЕ операции безопасности - полное логирование
+  - level: RequestResponse
+    verbs: ["create", "update", "patch", "delete"]
+    resources:
+      - group: "rbac.authorization.k8s.io"
+        resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
+      - group: ""
+        resources: ["serviceaccounts"]
+    # Убираем ограничение по namespaces для полного покрытия RBAC операций
+    omitStages: ["RequestReceived"]
+
+  # Привилегированные поды и секреты - полное логирование
+  - level: RequestResponse
+    verbs: ["create", "update", "patch"]
+    resources:
+      - group: ""
+        resources: ["pods", "secrets"]
+    omitStages: ["RequestReceived"]
+
+  # Логирование exec операций в pod'ах (lateral movement detection)
+  - level: Request
+    verbs: ["create"]
+    resources:
+      - group: ""
+        resources: ["pods/exec", "pods/attach", "pods/portforward"]
+    omitStages: ["RequestReceived"]
+
+  # Подозрительные операции с секретами - логирование запросов
+  - level: Request
+    verbs: ["get", "list"]
+    resources:
+      - group: ""
+        resources: ["secrets"]
+    namespaces: ["kube-system", "kube-public"]
+    omitStages: ["RequestReceived"]
+
+  # Логирование операций с impersonation (--as флаг)
+  # Правило для основных ресурсов при использовании impersonation
+  - level: Request
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+    omitStages: ["RequestReceived"]
+    resources:
+      - group: ""
+        resources: ["secrets", "configmaps", "pods", "services"]
+      - group: "rbac.authorization.k8s.io"
+        resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
+
+  # Создание namespace - потенциальная подготовка к атаке
+  - level: RequestResponse
+    verbs: ["create", "delete"]
+    resources:
+      - group: ""
+        resources: ["namespaces"]
+    omitStages: ["RequestReceived"]
+
+  # Логирование операций с auth can-i (проверка прав доступа)
+  - level: Request
+    verbs: ["create"]
+    resources:
+      - group: "authorization.k8s.io"
+        resources: ["selfsubjectaccessreviews", "subjectaccessreviews"]
+    omitStages: ["RequestReceived"]
+
+  # Исключаем системные компоненты из рутинных операций
+  - level: None
+    users: 
+      - "system:kube-controller-manager"
+      - "system:kube-scheduler" 
+      - "system:node:minikube"
+      - "system:serviceaccount:kube-system:storage-provisioner"
+      - "system:serviceaccount:kube-system:deployment-controller"
+      - "system:serviceaccount:kube-system:replicaset-controller"
+      - "system:serviceaccount:kube-system:metrics-server"
+    verbs: ["get", "list", "watch"]
+    resources:
+      - group: ""
+        resources: ["configmaps", "endpoints", "events", "pods", "services"]
+      - group: "apps"
+        resources: ["deployments", "replicasets"]
+
+  # Исключаем watch операции для снижения шума
+  - level: None
+    verbs: ["watch"]
+
+  # Исключаем рутинные get операции от system:apiserver
+  - level: None
+    users: ["system:apiserver"]
+    verbs: ["get", "list"]
+    resources:
+      - group: ""
+        resources: ["configmaps", "endpoints", "events"]
+
+  # Остальные операции изменения - только метаданные
+  - level: Metadata
+    verbs: ["create", "update", "patch", "delete"]
+    resources:
+      - group: ""
+        resources: ["configmaps", "services", "endpoints"]
+      - group: "apps"
+        resources: ["deployments", "replicasets", "statefulsets"]
+      - group: "networking.k8s.io"
+        resources: ["ingresses", "networkpolicies"]
+    omitStages: ["RequestReceived"]
+
+  # Полностью игнорируем безопасные read-only операции
+  - level: None
+    verbs: ["get", "list"]
+    resources:
+      - group: ""
+        resources: ["configmaps", "services", "endpoints", "events"]
+      - group: "apps"
+        resources: ["deployments", "replicasets"]
