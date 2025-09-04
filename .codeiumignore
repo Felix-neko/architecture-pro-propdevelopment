@@ -37,9 +37,6 @@ ENV/
 *.crt
 *.csr
 
-# Log files
-*.log
-logs/
 
 # Local development
 .env
