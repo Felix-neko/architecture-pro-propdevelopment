@@ -1,0 +1,69 @@
+/bin/bash /home/felix/Projects/yandex_swa_pro/architecture-pro-propdevelopment/task_6_audit_logs/simulate_security_incident_reworked.sh
+Начало: Пт 05 сен 2025 01:59:41 MSK
+Создаём привилегированный под [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+pod/privileged-pod created
+pod/privileged-pod condition met
+Просматриваем текущие политики безопасности [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+  - level: RequestResponse
+    verbs: ["create", "delete", "update", "patch", "get", "list"]
+    resources:
+      - group: ""
+        resources: ["pods", "secrets", "configmaps", "serviceaccounts", "roles", "rolebindings"]
+  - level: Metadata
+    resources:
+      - group: ""
+        resources: ["*"]Удаляем политики безопасности, в 1-й раз должно вывестись REMOVED [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+REMOVED
+Во 2-й раз будет отказ в доступе, это проверка, что файл точно удалён [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+rm: can't remove '/host/etc/ssl/certs/audit-policy.yaml': No such file or directory
+command terminated with exit code 1
+Создание namespace [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+namespace/secure-ops created
+Context "minikube" modified.
+Создание service account [ДОЛЖНО ПОПАТСЬ В ЛОГИ]
+serviceaccount/monitoring created
+Создание пода с указанным SA [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+error: unknown flag: --serviceaccount
+See 'kubectl run --help' for usage.
+can-i get secrets --as=system:serviceaccount:secure-ops:monitoring [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+no
+Добавляем SA monitoring права на системное пространство [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+rolebinding.rbac.authorization.k8s.io/escalate-binding created
+Добавляем SA monitoring права на пространство secure-ops [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+rolebinding.rbac.authorization.k8s.io/escalate-binding-kube-system created
+can-i get secrets --as=system:serviceaccount:secure-ops:monitoring [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+no
+Читаем секреты из-под админа [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+NAME                     TYPE                            DATA   AGE
+bootstrap-token-f8kiem   bootstrap.kubernetes.io/token   6      72s
+Читаем секреты из-под SA monitoring [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+NAME                     TYPE                            DATA   AGE
+bootstrap-token-f8kiem   bootstrap.kubernetes.io/token   6      72s
+Читаем что-то на minikube host (точнее, в docker-контейнере minikube) [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+Targeting container "storage-provisioner". If you don't see processes from this container it may be because the container runtime doesn't support this feature.
+--profile=legacy is deprecated and will be removed in the future. It is recommended to explicitly specify a profile, for example "--profile=general".
+Defaulting debug container name to debugger-gj6bn.
+# Kubernetes-managed hosts file (host network).
+127.0.0.1       localhost
+::1     localhost ip6-localhost ip6-loopback
+fe00::  ip6-localnet
+ff00::  ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+192.168.49.2    minikube
+192.168.49.1    host.minikube.internal
+192.168.49.2    control-plane.minikube.internal
+Читаем ещё что-то на minikube host (точнее, в docker-контейнере minikube) [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+Targeting container "storage-provisioner". If you don't see processes from this container it may be because the container runtime doesn't support this feature.
+--profile=legacy is deprecated and will be removed in the future. It is recommended to explicitly specify a profile, for example "--profile=general".
+Defaulting debug container name to debugger-rv5zc.
+nameserver 192.168.49.1
+options ndots:0 edns0 trust-ad
+Конец: Пт 05 сен 2025 02:00:23 MSK
+
+Process finished with exit code 0
+
+
