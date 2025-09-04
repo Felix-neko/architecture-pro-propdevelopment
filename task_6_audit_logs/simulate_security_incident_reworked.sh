@@ -48,10 +48,6 @@ kubectl exec -it privileged-pod -- rm /host/etc/ssl/certs/audit-policy.yaml && e
 
 # Хинт: логи после этого не должны перестать записываться в прежнем режиме даже после перезагрузки minikube (по крайней мере, audit-policy.yaml после пересоздания minikube там появилось снова)
 
-echo Выключение кластера [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
-minikube stop
-echo Включение кластера [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
-minikube start
 
 echo Создание namespace [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
 kubectl create ns secure-ops
