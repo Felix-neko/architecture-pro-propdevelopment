@@ -59,5 +59,5 @@ Error from server (Forbidden): error when creating "./insecure-manifests/03-root
 ## Что с манифестами?
 Их я честно сгенерировал Claude Sonnet 4 с небольшой ручной доработкой:
 - [`insecure-manifests`](./insecure-manifests) -- 4 манифеста для проверочных подов (1 без привилегий и должен проходить везде, 3 с привилегиями и не должны проходить в пространствах, где привилегии запрещены);
-- [`constraint-template.yaml``] -- constraint template для OPA Gatekeeper, который задаёт спецификацию проверки привилегий (имеет настраиваемый параметр `targetNamespace`)
+- [`constraint-template.yaml`](constraint-template.yaml) -- constraint template для OPA Gatekeeper, который задаёт спецификацию проверки привилегий (имеет настраиваемый параметр `targetNamespace`)
 - [`constraint.yaml`](constraint.yaml) -- привязка предыдущего constraint template на проверку привилегий конкретно в пространства `opa-gatekeeper-controlled`. 
