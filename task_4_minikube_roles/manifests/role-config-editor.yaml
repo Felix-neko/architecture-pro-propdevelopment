@@ -1,0 +1,19 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: config-editor
+  # Роль для полного управления ConfigMap в пространствах sales-services-*
+  # Исключает доступ к секретам для безопасности
+rules:
+# Полный доступ к ConfigMaps - создание, чтение, обновление, удаление
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+# Чтение событий для отладки конфигураций
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get", "list", "watch"]
+# Чтение подов для проверки применения конфигураций
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]

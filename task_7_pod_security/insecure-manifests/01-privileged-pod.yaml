@@ -1,0 +1,17 @@
+# 01-privileged-pod.yaml
+# Под с привилегированным доступом - может обращаться ко всем устройствам хоста
+apiVersion: v1
+kind: Pod
+metadata:
+  name: privileged-nginx
+  labels:
+    app: privileged-nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:alpine
+    securityContext:
+      privileged: true  # НЕБЕЗОПАСНО: полный доступ к хосту
+    ports:
+    - containerPort: 80
+  restartPolicy: Always

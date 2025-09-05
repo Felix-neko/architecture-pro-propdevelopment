@@ -1,0 +1,113 @@
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+  # КРИТИЧЕСКИ ВАЖНЫЕ СОБЫТИЯ - максимальный уровень логирования
+  - level: RequestResponse
+    verbs: ["create", "delete", "update", "patch"]
+    resources:
+      - group: ""
+        resources: ["pods", "secrets", "configmaps", "serviceaccounts"]
+      - group: "rbac.authorization.k8s.io"
+        resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
+    
+  # KUBECTL EXEC/ATTACH/DEBUG - полное логирование команд
+  - level: RequestResponse
+    verbs: ["create", "get", "list"]
+    resources:
+      - group: ""
+        resources: ["pods/exec", "pods/attach", "pods/portforward", "pods/ephemeralcontainers"]
+    namespaces: ["default", "kube-system", "secure-ops"]
+    
+  # СПЕЦИАЛЬНОЕ ПРАВИЛО: Логирование всех операций с привилегированными подами
+  - level: RequestResponse
+    verbs: ["create", "update", "patch", "delete"]
+    resources:
+      - group: ""
+        resources: ["pods"]
+    omitStages: ["RequestReceived"]
+    # Это правило будет логировать создание подов с привилегированными настройками
+    
+  # KUBECTL DEBUG - обнаружение ephemeral containers
+  - level: RequestResponse
+    verbs: ["create", "update", "patch"]
+    resources:
+      - group: ""
+        resources: ["pods/ephemeralcontainers"]
+    # Логирует создание ephemeral контейнеров (kubectl debug)
+    
+  # СИСТЕМНЫЕ NAMESPACE - повышенное внимание
+  - level: RequestResponse
+    verbs: ["create", "delete", "update", "patch", "get", "list"]
+    namespaces: ["kube-system", "kube-public", "kube-node-lease"]
+    resources:
+      - group: ""
+        resources: ["*"]
+      - group: "rbac.authorization.k8s.io"
+        resources: ["*"]
+        
+  # МОНИТОРИНГ ФАЙЛОВЫХ ОПЕРАЦИЙ через exec
+  - level: RequestResponse
+    verbs: ["create"]
+    resources:
+      - group: ""
+        resources: ["pods/exec"]
+    # Будет логировать все exec команды с полными параметрами
+    
+  # ОБНАРУЖЕНИЕ ПОДОЗРИТЕЛЬНЫХ ОБРАЗОВ
+  - level: RequestResponse
+    verbs: ["create", "update", "patch"]
+    resources:
+      - group: ""
+        resources: ["pods"]
+    # Для обнаружения использования образов типа nicolaka/netshoot
+    
+  # ESCALATION DETECTION - мониторинг эскалации привилегий
+  - level: RequestResponse
+    verbs: ["create", "update", "patch"]
+    resources:
+      - group: "rbac.authorization.k8s.io"
+        resources: ["rolebindings", "clusterrolebindings"]
+    # Логирует создание RBAC привязок
+    
+  # AUTHENTICATION EVENTS - события аутентификации
+  - level: Request
+    verbs: ["create"]
+    resources:
+      - group: "authentication.k8s.io"
+        resources: ["tokenreviews"]
+        
+  # AUTHORIZATION EVENTS - события авторизации
+  - level: Request
+    verbs: ["create"]
+    resources:
+      - group: "authorization.k8s.io"
+        resources: ["subjectaccessreviews", "selfsubjectaccessreviews"]
+        
+  # SERVICE ACCOUNT TOKEN REQUESTS
+  - level: RequestResponse
+    verbs: ["create"]
+    resources:
+      - group: ""
+        resources: ["serviceaccounts/token"]
+        
+  # ОБЩИЕ СОБЫТИЯ - базовый уровень
+  - level: Metadata
+    verbs: ["get", "list", "watch"]
+    resources:
+      - group: ""
+        resources: ["*"]
+      - group: "rbac.authorization.k8s.io"
+        resources: ["*"]
+        
+  # ИСКЛЮЧЕНИЯ - не логируем слишком частые события
+  - level: None
+    verbs: ["get", "list", "watch"]
+    resources:
+      - group: ""
+        resources: ["events"]
+    namespaces: ["kube-system"]
+    
+  # ИСКЛЮЧЕНИЯ - системные операции
+  - level: None
+    users: ["system:kube-proxy", "system:kube-controller-manager", "system:kube-scheduler"]
+    verbs: ["get", "list", "watch"]

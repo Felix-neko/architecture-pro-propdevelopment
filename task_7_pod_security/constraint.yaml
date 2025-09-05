@@ -1,0 +1,19 @@
+# Constraint для применения политики безопасности
+apiVersion: constraints.gatekeeper.sh/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: secure-pods-policy
+  annotations:
+    description: "Применяет строгие политики безопасности к подам в namespace opa-gatekeeper-controlled"
+spec:
+  match:
+    kinds:
+      - apiGroups: [""]
+        kinds: ["Pod"]
+      - apiGroups: ["apps"]
+        kinds: ["Deployment", "ReplicaSet", "DaemonSet", "StatefulSet"]
+      - apiGroups: ["batch"]
+        kinds: ["Job", "CronJob"]
+  parameters:
+    targetNamespace: "opa-gatekeeper-controlled"
+  enforcementAction: deny  # или warn для предупреждений

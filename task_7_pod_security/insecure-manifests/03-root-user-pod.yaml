@@ -1,0 +1,24 @@
+# 03-root-user-pod.yaml
+# Под, запущенный от пользователя root
+apiVersion: v1
+kind: Pod
+metadata:
+  name: root-user-nginx
+  labels:
+    app: root-user-nginx
+spec:
+  containers:
+  - name: nginx
+    image: nginx:alpine
+    ports:
+    - containerPort: 80
+    securityContext:
+      runAsUser: 0     # НЕБЕЗОПАСНО: root UID
+      runAsGroup: 0    # НЕБЕЗОПАСНО: root GID
+#      allowPrivilegeEscalation: true  # НЕБЕЗОПАСНО: разрешена эскалация
+#      capabilities:
+#        add:
+#        - SYS_ADMIN    # НЕБЕЗОПАСНО: административные возможности
+#        - NET_ADMIN    # НЕБЕЗОПАСНО: сетевые возможности
+#        - SYS_CHROOT   # НЕБЕЗОПАСНО: возможность chroot
+  restartPolicy: Always

@@ -1,0 +1,16 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sales-lead-devops-binding
+  # RoleBinding для группы sales-lead-devops
+  # Привязывает роль sales-secrets-reader для доступа ко всем секретам
+subjects:
+# Группа sales-lead-devops получает расширенные права на чтение секретов во всех sales пространствах
+- kind: Group
+  name: sales-lead-devops
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  # Привязка к роли sales-secrets-reader
+  kind: Role
+  name: secrets-reader
+  apiGroup: rbac.authorization.k8s.io

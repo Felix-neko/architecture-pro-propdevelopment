@@ -1,0 +1,97 @@
+# GENERATED WITH CLAUDE SONNET 4
+#Оптимизированная политика аудита
+#Ключевые принципы:
+#
+#Исключить системные компоненты из рутинных операций
+#Фокус на критических операциях безопасности (RBAC, привилегированные поды, секреты)
+#Убрать watch операции - основной источник шума
+#Полное логирование только для подозрительных действий
+
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+  # КРИТИЧЕСКИЕ операции безопасности - полное логирование
+  - level: RequestResponse
+    verbs: ["create", "update", "patch", "delete"]
+    resources:
+      - group: "rbac.authorization.k8s.io"
+        resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
+      - group: ""
+        resources: ["serviceaccounts"]
+    namespaces: ["kube-system", "kube-public", "default"]
+    omitStages: ["RequestReceived"]
+
+  # Привилегированные поды и секреты - полное логирование
+  - level: RequestResponse
+    verbs: ["create", "update", "patch"]
+    resources:
+      - group: ""
+        resources: ["pods", "secrets"]
+    omitStages: ["RequestReceived"]
+
+  # Подозрительные операции с секретами - логирование запросов
+  - level: Request
+    verbs: ["get", "list"]
+    resources:
+      - group: ""
+        resources: ["secrets"]
+    namespaces: ["kube-system", "kube-public"]
+    omitStages: ["RequestReceived"]
+
+  # Создание namespace - потенциальная подготовка к атаке
+  - level: RequestResponse
+    verbs: ["create", "delete"]
+    resources:
+      - group: ""
+        resources: ["namespaces"]
+    omitStages: ["RequestReceived"]
+
+  # Исключаем системные компоненты из рутинных операций
+  - level: None
+    users:
+      - "system:kube-controller-manager"
+      - "system:kube-scheduler"
+      - "system:node:minikube"
+      - "system:serviceaccount:kube-system:storage-provisioner"
+      - "system:serviceaccount:kube-system:deployment-controller"
+      - "system:serviceaccount:kube-system:replicaset-controller"
+      - "system:serviceaccount:kube-system:metrics-server"
+    verbs: ["get", "list", "watch"]
+    resources:
+      - group: ""
+        resources: ["configmaps", "endpoints", "events", "pods", "services"]
+      - group: "apps"
+        resources: ["deployments", "replicasets"]
+
+  # Исключаем watch операции для снижения шума
+  - level: None
+    verbs: ["watch"]
+
+  # Исключаем рутинные get операции от system:apiserver
+  - level: None
+    users: ["system:apiserver"]
+    verbs: ["get", "list"]
+    resources:
+      - group: ""
+        resources: ["configmaps", "endpoints", "events"]
+
+  # Остальные операции изменения - только метаданные
+  - level: Metadata
+    verbs: ["create", "update", "patch", "delete"]
+    resources:
+      - group: ""
+        resources: ["configmaps", "services", "endpoints"]
+      - group: "apps"
+        resources: ["deployments", "replicasets", "statefulsets"]
+      - group: "networking.k8s.io"
+        resources: ["ingresses", "networkpolicies"]
+    omitStages: ["RequestReceived"]
+
+  # Полностью игнорируем безопасные read-only операции
+  - level: None
+    verbs: ["get", "list"]
+    resources:
+      - group: ""
+        resources: ["configmaps", "services", "endpoints", "events"]
+      - group: "apps"
+        resources: ["deployments", "replicasets"]

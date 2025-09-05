@@ -1,0 +1,286 @@
+# RoleBinding для группы sales-developers
+# Привязывает роль app-viewer для просмотра ресурсов в sales пространствах
+# Предназначена для разработчиков с правами только на чтение
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-viewer-binding
+  namespace: sales-services-prod
+  # Привязка для просмотра ресурсов в production среде
+subjects:
+- kind: Group
+  name: sales-developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: app-viewer
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-viewer-binding
+  namespace: sales-services-dev
+  # Привязка для просмотра ресурсов в development среде
+subjects:
+- kind: Group
+  name: sales-developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: app-viewer
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-viewer-binding
+  namespace: sales-services-test1
+  # Привязка для просмотра ресурсов в тестовой среде test1
+subjects:
+- kind: Group
+  name: sales-developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: app-viewer
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-viewer-binding
+  namespace: sales-services-test2
+  # Привязка для просмотра ресурсов в тестовой среде test2
+subjects:
+- kind: Group
+  name: sales-developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: app-viewer
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-viewer-binding
+  namespace: sales-services-test3
+  # Привязка для просмотра ресурсов в тестовой среде test3
+subjects:
+- kind: Group
+  name: sales-developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: app-viewer
+  apiGroup: rbac.authorization.k8s.io
+
+# ===== TEST-SECRETS-READER ROLEBINDINGS FOR SALES-DEVELOPERS =====
+# RoleBinding для чтения секретов группой sales-developers только в тестовых пространствах
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sales-developers-secrets-reader-binding
+  namespace: sales-services-test1
+  # Привязка для чтения секретов группой sales-developers в test1
+subjects:
+- kind: Group
+  name: sales-developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: test-secrets-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sales-developers-secrets-reader-binding
+  namespace: sales-services-test2
+  # Привязка для чтения секретов группой sales-developers в test2
+subjects:
+- kind: Group
+  name: sales-developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: test-secrets-reader
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sales-developers-secrets-reader-binding
+  namespace: sales-services-test3
+  # Привязка для чтения секретов группой sales-developers в test3
+subjects:
+- kind: Group
+  name: sales-developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: test-secrets-reader
+  apiGroup: rbac.authorization.k8s.io
+
+# ===== APP-DEPLOYER ROLEBINDINGS FOR SALES-DEVELOPERS IN TEST ENVIRONMENTS =====
+# RoleBinding для развертывания приложений группой sales-developers только в тестовых пространствах
+# В тестовых средах разработчики могут делать что угодно - их не жалко, это песочница для экспериментов
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sales-developers-app-deployer-binding
+  namespace: sales-services-test1
+  # Привязка для развертывания приложений группой sales-developers в test1
+  # Тестовая среда - можно ломать и экспериментировать
+subjects:
+- kind: Group
+  name: sales-developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: app-deployer
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sales-developers-app-deployer-binding
+  namespace: sales-services-test2
+  # Привязка для развертывания приложений группой sales-developers в test2
+  # Тестовая среда - разработчики могут свободно создавать и удалять ресурсы
+subjects:
+- kind: Group
+  name: sales-developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: app-deployer
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sales-developers-app-deployer-binding
+  namespace: sales-services-test3
+  # Привязка для развертывания приложений группой sales-developers в test3
+  # Тестовая среда - полная свобода для разработчиков, экспериментируйте!
+subjects:
+- kind: Group
+  name: sales-developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: app-deployer
+  apiGroup: rbac.authorization.k8s.io
+
+# ===== CONFIG-EDITOR ROLEBINDINGS FOR SALES-DEVELOPERS IN TEST ENVIRONMENTS =====
+# RoleBinding для управления ConfigMaps группой sales-developers в тестовых пространствах
+# Тестовые среды - разработчики могут свободно создавать и изменять конфигурации
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sales-developers-config-editor-binding
+  namespace: sales-services-test1
+  # Привязка для управления ConfigMaps группой sales-developers в test1
+  # Тестовая среда - можно экспериментировать с конфигурациями
+subjects:
+- kind: Group
+  name: sales-developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: config-editor
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sales-developers-config-editor-binding
+  namespace: sales-services-test2
+  # Привязка для управления ConfigMaps группой sales-developers в test2
+  # Тестовая среда - полная свобода с конфигурациями
+subjects:
+- kind: Group
+  name: sales-developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: config-editor
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sales-developers-config-editor-binding
+  namespace: sales-services-test3
+  # Привязка для управления ConfigMaps группой sales-developers в test3
+  # Тестовая среда - разработчики могут создавать любые конфигурации
+subjects:
+- kind: Group
+  name: sales-developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: config-editor
+  apiGroup: rbac.authorization.k8s.io
+
+# ===== INGRESS-EDITOR ROLEBINDINGS FOR SALES-DEVELOPERS IN TEST ENVIRONMENTS =====
+# RoleBinding для управления Services и Ingress группой sales-developers в тестовых пространствах
+# Тестовые среды - разработчики могут настраивать сетевые сервисы для тестирования
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sales-developers-ingress-editor-binding
+  namespace: sales-services-test1
+  # Привязка для управления Services и Ingress группой sales-developers в test1
+  # Тестовая среда - можно создавать и настраивать сетевые сервисы
+subjects:
+- kind: Group
+  name: sales-developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: ingress-editor
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sales-developers-ingress-editor-binding
+  namespace: sales-services-test2
+  # Привязка для управления Services и Ingress группой sales-developers в test2
+  # Тестовая среда - полная свобода с сетевыми настройками
+subjects:
+- kind: Group
+  name: sales-developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: ingress-editor
+  apiGroup: rbac.authorization.k8s.io
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: sales-developers-ingress-editor-binding
+  namespace: sales-services-test3
+  # Привязка для управления Services и Ingress группой sales-developers в test3
+  # Тестовая среда - разработчики могут экспериментировать с сетевыми сервисами
+subjects:
+- kind: Group
+  name: sales-developers
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: ingress-editor
+  apiGroup: rbac.authorization.k8s.io

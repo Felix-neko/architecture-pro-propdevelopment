@@ -1,0 +1,59 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: app-deployer
+  # Роль для развертывания и управления приложениями в sales пространствах
+  # Предоставляет полные права на управление workload ресурсами
+rules:
+# Управление основными workload ресурсами (Deployments, ReplicaSets, StatefulSets)
+# Необходимо для развертывания и масштабирования приложений
+- apiGroups: ["apps"]
+  resources:
+    - deployments
+    - replicasets
+    - statefulsets
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+# Управление Jobs и CronJobs для выполнения задач и планировщика
+# Позволяет создавать и управлять периодическими и разовыми задачами
+- apiGroups: ["batch"]
+  resources:
+    - jobs
+    - cronjobs
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+# Управление ConfigMaps для конфигурации приложений
+# Полные права на создание и изменение конфигураций для развертывания
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+# Управление Secrets: создание, обновление, удаление
+# Только метаданные и список - НЕ ВКЛЮЧАЕТ чтение содержимого (get убран)
+- apiGroups: [""]
+  resources: ["secrets"]
+  verbs: ["list", "watch", "create", "update", "patch", "delete"]
+
+# Управление подами для развертывания и отладки приложений
+# Необходимо для создания, обновления и удаления подов при развертывании
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]
+
+# Доступ к логам подов для отладки приложений
+# Критично для диагностики проблем развертывания
+- apiGroups: [""]
+  resources: ["pods/log"]
+  verbs: ["get", "list"]
+
+# Просмотр событий кластера для отладки проблем развертывания
+# Помогает диагностировать ошибки при создании ресурсов
+- apiGroups: [""]
+  resources: ["events"]
+  verbs: ["get", "list", "watch"]
+
+# Управление Services для сетевого доступа к приложениям
+# Необходимо для создания и настройки сетевых сервисов при развертывании
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "list", "watch", "create", "update", "patch", "delete"]

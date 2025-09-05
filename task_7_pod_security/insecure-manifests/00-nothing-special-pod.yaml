@@ -1,0 +1,26 @@
+# 00-nothing-special-pod.yaml
+# Под без привилегированных доступов
+apiVersion: v1
+kind: Pod
+metadata:
+  name: nothing-special-nginx
+  labels:
+    app: nothing-special-nginx
+spec:
+  securityContext:
+    runAsNonRoot: true
+
+  containers:
+  - name: nginx
+    image: nginxinc/nginx-unprivileged
+    ports:
+    - containerPort: 80
+    securityContext:
+      runAsNonRoot: true
+      allowPrivilegeEscalation: false
+      seccompProfile:  # (secure computing profile)
+        type: RuntimeDefault
+      capabilities:  # тонкие (градуированные) привилегии ядра
+        drop:
+        - ALL
+  restartPolicy: Always
