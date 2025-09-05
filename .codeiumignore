@@ -46,9 +46,6 @@ ENV/
 .DS_Store
 Thumbs.db
 
-# Project specific exclusions
-task_6_audit_logs/logs_*.log
-task_6_audit_logs/*.log
 
 # Large binary files
 *.bin
@@ -111,7 +108,6 @@ build/
 *.local.yaml
 
 # Logs and databases
-*.log
 *.sql
 *.sqlite
 

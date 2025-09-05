@@ -1,0 +1,193 @@
+/bin/bash /home/felix/Projects/yandex_swa_pro/architecture-pro-propdevelopment/task_6_audit_logs/simulate_security_incident_reworked.sh
+Начало: Пт 05 сен 2025 02:43:10 MSK
+Создаём привилегированный под [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+pod/privileged-pod created
+pod/privileged-pod condition met
+Просматриваем текущие политики безопасности [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+apiVersion: audit.k8s.io/v1
+kind: Policy
+rules:
+  # КРИТИЧЕСКИЕ операции безопасности - полное логирование
+  - level: RequestResponse
+    verbs: ["create", "update", "patch", "delete"]
+    resources:
+      - group: "rbac.authorization.k8s.io"
+        resources: ["roles", "rolebindings", "clusterroles", "clusterrolebindings"]
+      - group: ""
+        resources: ["serviceaccounts"]
+    omitStages: ["RequestReceived"]
+
+  # Привилегированные поды и секреты - полное логирование
+  - level: RequestResponse
+    verbs: ["create", "update", "patch"]
+    resources:
+      - group: ""
+        resources: ["pods", "secrets"]
+    omitStages: ["RequestReceived"]
+
+  # Логирование exec операций в pod'ах - УСИЛЕНО
+  - level: RequestResponse  # Изменено с Request на RequestResponse
+    verbs: ["create"]
+    resources:
+      - group: ""
+        resources: ["pods/exec", "pods/attach", "pods/portforward"]
+    omitStages: ["RequestReceived"]
+
+  # НОВОЕ: Логирование ephemeral containers (kubectl debug)
+  - level: RequestResponse
+    verbs: ["create", "update", "patch"]
+    resources:
+      - group: ""
+        resources: ["pods/ephemeralcontainers"]
+    omitStages: ["RequestReceived"]
+
+  # НОВОЕ: Явное правило для impersonation операций
+  - level: RequestResponse
+    verbs: ["get", "list", "create", "update", "patch", "delete"]
+    omitStages: ["RequestReceived"]
+    # Фильтруем по наличию impersonation headers
+    namespaceObject:
+      matchLabels: {}
+    # Это правило сработает для всех операций с --as флагом
+
+  # Подозрительные операции с секретами - логирование запросов
+  - level: Request
+    verbs: ["get", "list"]
+    resources:
+      - group: ""
+        resources: ["secrets"]
+    namespaces: ["kube-system", "kube-public", "default"]  # Добавлен default
+    omitStages: ["RequestReceived"]
+
+  # Создание namespace - потенциальная подготовка к атаке
+  - level: RequestResponse
+    verbs: ["create", "delete"]
+    resources:
+      - group: ""
+        resources: ["namespaces"]
+    omitStages: ["RequestReceived"]
+
+  # Логирование операций с auth can-i (проверка прав доступа)
+  - level: Request
+    verbs: ["create"]
+    resources:
+      - group: "authorization.k8s.io"
+        resources: ["selfsubjectaccessreviews", "subjectaccessreviews"]
+    omitStages: ["RequestReceived"]
+
+  # НОВОЕ: Логирование операций с токенами service accounts
+  - level: RequestResponse
+    verbs: ["create", "get"]
+    resources:
+      - group: ""
+        resources: ["serviceaccounts/token"]
+    omitStages: ["RequestReceived"]
+
+  # НОВОЕ: Логирование операций с Persistent Volumes (потенциальный доступ к хост-файлам)
+  - level: Request
+    verbs: ["create", "update", "patch"]
+    resources:
+      - group: ""
+        resources: ["persistentvolumes", "persistentvolumeclaims"]
+    omitStages: ["RequestReceived"]
+
+  # Исключаем системные компоненты из рутинных операций
+  - level: None
+    users:
+      - "system:kube-controller-manager"
+      - "system:kube-scheduler"
+      - "system:node:minikube"
+      - "system:serviceaccount:kube-system:storage-provisioner"
+      - "system:serviceaccount:kube-system:deployment-controller"
+      - "system:serviceaccount:kube-system:replicaset-controller"
+      - "system:serviceaccount:kube-system:metrics-server"
+    verbs: ["get", "list", "watch"]
+    resources:
+      - group: ""
+        resources: ["configmaps", "endpoints", "events", "pods", "services"]
+      - group: "apps"
+        resources: ["deployments", "replicasets"]
+
+  # Исключаем watch операции для снижения шума
+  - level: None
+    verbs: ["watch"]
+
+  # Исключаем рутинные get операции от system:apiserver
+  - level: None
+    users: ["system:apiserver"]
+    verbs: ["get", "list"]
+    resources:
+      - group: ""
+        resources: ["configmaps", "endpoints", "events"]
+
+  # Остальные операции изменения - только метаданные
+  - level: Metadata
+    verbs: ["create", "update", "patch", "delete"]
+    resources:
+      - group: ""
+        resources: ["configmaps", "services", "endpoints"]
+      - group: "apps"
+        resources: ["deployments", "replicasets", "statefulsets"]
+      - group: "networking.k8s.io"
+        resources: ["ingresses", "networkpolicies"]
+    omitStages: ["RequestReceived"]
+
+  # Полностью игнорируем безопасные read-only операции
+  - level: None
+    verbs: ["get", "list"]
+    resources:
+      - group: ""
+        resources: ["configmaps", "services", "endpoints", "events"]
+      - group: "apps"
+        resources: ["deployments", "replicasets"]Удаляем политики безопасности, в 1-й раз должно вывестись REMOVED [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+REMOVED
+Во 2-й раз будет отказ в доступе, это проверка, что файл точно удалён [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+rm: can't remove '/host/etc/ssl/certs/audit-policy.yaml': No such file or directory
+command terminated with exit code 1
+Создание namespace [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+namespace/secure-ops created
+Context "minikube" modified.
+Создание service account [ДОЛЖНО ПОПАТСЬ В ЛОГИ]
+serviceaccount/monitoring created
+Создание пода с указанным SA [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+error: unknown flag: --serviceaccount
+See 'kubectl run --help' for usage.
+can-i get secrets --as=system:serviceaccount:secure-ops:monitoring [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+no
+Добавляем SA monitoring права на системное пространство [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+rolebinding.rbac.authorization.k8s.io/escalate-binding created
+Добавляем SA monitoring права на пространство secure-ops [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+rolebinding.rbac.authorization.k8s.io/escalate-binding-kube-system created
+can-i get secrets --as=system:serviceaccount:secure-ops:monitoring [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+no
+Читаем секреты из-под админа [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+NAME                     TYPE                            DATA   AGE
+bootstrap-token-scs71s   bootstrap.kubernetes.io/token   6      73s
+Читаем секреты из-под SA monitoring [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+NAME                     TYPE                            DATA   AGE
+bootstrap-token-scs71s   bootstrap.kubernetes.io/token   6      74s
+Читаем что-то на minikube host (точнее, в docker-контейнере minikube) [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+Targeting container "storage-provisioner". If you don't see processes from this container it may be because the container runtime doesn't support this feature.
+--profile=legacy is deprecated and will be removed in the future. It is recommended to explicitly specify a profile, for example "--profile=general".
+Defaulting debug container name to debugger-xlbq5.
+# Kubernetes-managed hosts file (host network).
+127.0.0.1       localhost
+::1     localhost ip6-localhost ip6-loopback
+fe00::  ip6-localnet
+ff00::  ip6-mcastprefix
+ff02::1 ip6-allnodes
+ff02::2 ip6-allrouters
+192.168.49.2    minikube
+192.168.49.1    host.minikube.internal
+192.168.49.2    control-plane.minikube.internal
+Читаем ещё что-то на minikube host (точнее, в docker-контейнере minikube) [ДОЛЖНО ПОПАСТЬ В ЛОГИ]
+Targeting container "storage-provisioner". If you don't see processes from this container it may be because the container runtime doesn't support this feature.
+--profile=legacy is deprecated and will be removed in the future. It is recommended to explicitly specify a profile, for example "--profile=general".
+Defaulting debug container name to debugger-frrgh.
+nameserver 192.168.49.1
+options edns0 trust-ad ndots:0
+Конец: Пт 05 сен 2025 02:43:52 MSK
+
+Process finished with exit code 0
+
+
